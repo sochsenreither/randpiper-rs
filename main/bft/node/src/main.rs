@@ -8,6 +8,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yml");
     let m = App::from_yaml(yaml).get_matches();
 
+    simple_logger::SimpleLogger::new().init().unwrap();
+    let x = m.occurrences_of("debug");
+    match x {
+        0 => log::set_max_level(log::LevelFilter::Info),
+        1 => log::set_max_level(log::LevelFilter::Debug),
+        2 | _ => log::set_max_level(log::LevelFilter::Trace),
+    }
+
+    log::info!(target:"app","Starting to decode config file");
+
     let conf_str = m
         .value_of("config")
         .expect("unable to convert config file into a string");
@@ -32,20 +42,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Some(f) = m.value_of("ip") {
         config.update_config(util::io::file_to_ips(f.to_string()));
     }
-    println!("{:?}", config.net_map);
+    log::info!("{:?}", config.net_map);
     let config = config;
     let mut is_client_apollo_enabled = false;
     if let Some(_x) = m.value_of("special_client") {
         is_client_apollo_enabled = true;
     }
 
-    simple_logger::SimpleLogger::new().init().unwrap();
-    let x = m.occurrences_of("debug");
-    match x {
-        0 => log::set_max_level(log::LevelFilter::Info),
-        1 => log::set_max_level(log::LevelFilter::Debug),
-        2 | _ => log::set_max_level(log::LevelFilter::Trace),
-    }
     unsafe {
         config_lc::SLEEP_TIME = 10 + 4 * config.num_nodes as u64;
     }
@@ -86,6 +89,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .worker_threads(2)
         .build()
         .unwrap();
+
+    log::info!(target:"app","Starting the protocol");
 
     // Start the Apollo consensus protocol
     core_rt.block_on(consensus::bft::node::reactor(
