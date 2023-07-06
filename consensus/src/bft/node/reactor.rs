@@ -196,7 +196,7 @@ pub async fn reactor(
                 }
                 let (_, pmsg) = pmsg_opt.unwrap();
                 let s = pmsg.to_string();
-                println!("{}: Received {:?}.", myid, s);
+                log::info!("{}: Received {:?}.", myid, s);
                 let time_before = time::Instant::now();
                 match pmsg {
                     ProtocolMsg::Certificate(p) => {
@@ -204,7 +204,7 @@ pub async fn reactor(
                             // Check that the certificate is valid.
                             for vote in p.votes.iter() {
                                 if !cx.pub_key_map.get(&vote.origin).unwrap().verify(&vote.msg, &vote.auth) {
-                                    println!("[WARN] Cannot verify the certificate.")
+                                    log::info!("[WARN] Cannot verify the certificate.")
                                 }
                             }
                             let hash = if p.votes.len() == 0 { EMPTY_HASH.to_vec() } else { p.votes[0].msg.clone() };
@@ -222,22 +222,22 @@ pub async fn reactor(
                         let hash = p.new_block.hash.to_vec();
                         for cert in p.certificate.votes.iter() {
                             if cert.msg != hash {
-                                println!("[WARN] The hash of the certification does not match block.");
+                                log::info!("[WARN] The hash of the certification does not match block.");
                                 is_valid = false;
                             }
                             if !cx.pub_key_map.get(&cert.origin).unwrap().verify(&cert.msg, &cert.auth) {
-                                println!("[WARN] The auth of the certification does not match block.");
+                                log::info!("[WARN] The auth of the certification does not match block.");
                                 is_valid = false;
                             }
                         }
                         let commit_hash = crypto::hash::ser_and_hash(&p.new_block.body.data.commits);
                         for cert in p.new_block.body.data.acks.iter() {
                             if cert.msg != commit_hash {
-                                println!("[WARN] The hash of the certification does not match commit.");
+                                log::info!("[WARN] The hash of the certification does not match commit.");
                                 is_valid = false;
                             }
                             if !cx.pub_key_map.get(&cert.origin).unwrap().verify(&cert.msg, &cert.auth) {
-                                println!("[WARN] The auth of the certification does not match commit.");
+                                log::info!("[WARN] The auth of the certification does not match commit.");
                                 is_valid = false;
                             }
                         }
@@ -317,7 +317,7 @@ pub async fn reactor(
                             cx.received_commit = Some(c);
                             cx.received_commit_sign = Some(z);
                         } else {
-                            println!("[WARN] Received invalid commit.")
+                            log::info!("[WARN] Received invalid commit.")
                         }
                     }
                     ProtocolMsg::DeliverCommit(sh, n, z) => {
@@ -352,14 +352,14 @@ pub async fn reactor(
                     }
                 };
                 let time_after = time::Instant::now();
-                println!("{}: Message {:?} took {} ms.", myid, s, (time_after - time_before).as_millis());
+                log::info!("{}: Message {:?} took {} ms.", myid, s, (time_after - time_before).as_millis());
             },
             _tx_opt = cli_recv.recv() => {
                 // We received a message from the client
             },
             _ = &mut phase_end => {
                 let s = phase.to_string();
-                println!("{}: Phase {:?}", myid, s);
+                log::info!("{}: Phase {:?}", myid, s);
                 let time_before = time::Instant::now();
                 match phase {
                     Phase::Propose => {
@@ -451,10 +451,10 @@ pub async fn reactor(
                             crypto::EVSS381::reconstruct(&vec).serialize(&mut buf).unwrap();
                             hash = crypto::hash::ser_and_hash(&buf);
                         }
-                        println!("Rand Beacon: {:x?}", hash);
+                        log::info!("Rand Beacon: {:x?}", hash);
                         cx.last_leader = cx.next_leader();
                         cx.epoch += 1;
-                        println!("{}: cx.epoch {}. Leader is {}.", myid, cx.epoch, cx.last_leader);
+                        log::info!("{}: cx.epoch {}. Leader is {}.", myid, cx.epoch, cx.last_leader);
                         cx.propose_gatherer.clear();
                         cx.vote_cert_gatherer.clear();
                         cx.commit_gatherer.clear();
@@ -466,7 +466,7 @@ pub async fn reactor(
                         if myid != cx.last_leader {
                             // Send the certification.
                             cx.net_send.send((cx.last_leader, Arc::new(ProtocolMsg::Certificate(cx.last_seen_block.certificate.clone())))).unwrap();
-                            println!("{}: Certification sent.", myid);
+                            log::info!("{}: Certification sent.", myid);
                             phase = Phase::DeliverPropose;
                             phase_end.as_mut().reset(begin + Duration::from_millis(delta * 11 * (cx.epoch - 1) + delta * 7));
                             if myid == cx.next_leader() {
@@ -510,7 +510,7 @@ pub async fn reactor(
                     }
                 };
                 let time_after = time::Instant::now();
-                println!("{}: Phase {:?} took {} ms.", myid, s, (time_after - time_before).as_millis());
+                log::info!("{}: Phase {:?} took {} ms.", myid, s, (time_after - time_before).as_millis());
             },
         }
     }
