@@ -196,7 +196,7 @@ pub async fn reactor(
                 }
                 let (_, pmsg) = pmsg_opt.unwrap();
                 let s = pmsg.to_string();
-                log::info!("{}: Received {:?}.", myid, s);
+                log::debug!("{}: Received {:?}.", myid, s);
                 let time_before = time::Instant::now();
                 match pmsg {
                     ProtocolMsg::Certificate(p) => {
@@ -352,14 +352,14 @@ pub async fn reactor(
                     }
                 };
                 let time_after = time::Instant::now();
-                log::info!("{}: Message {:?} took {} ms.", myid, s, (time_after - time_before).as_millis());
+                log::debug!("{}: Message {:?} took {} ms.", myid, s, (time_after - time_before).as_millis());
             },
             _tx_opt = cli_recv.recv() => {
                 // We received a message from the client
             },
             _ = &mut phase_end => {
                 let s = phase.to_string();
-                log::info!("{}: Phase {:?}", myid, s);
+                log::debug!("{}: Phase {:?}", myid, s);
                 let time_before = time::Instant::now();
                 match phase {
                     Phase::Propose => {
@@ -466,7 +466,7 @@ pub async fn reactor(
                         if myid != cx.last_leader {
                             // Send the certification.
                             cx.net_send.send((cx.last_leader, Arc::new(ProtocolMsg::Certificate(cx.last_seen_block.certificate.clone())))).unwrap();
-                            log::info!("{}: Certification sent.", myid);
+                            log::debug!("{}: Certification sent.", myid);
                             phase = Phase::DeliverPropose;
                             phase_end.as_mut().reset(begin + Duration::from_millis(delta * 11 * (cx.epoch - 1) + delta * 7));
                             if myid == cx.next_leader() {
