@@ -15,5 +15,5 @@ git clone https://github.com/sochsenreither/randpiper-rs.git
 cd randpiper-rs
 
 git pull
-git checkout biaccumulator
+# git checkout biaccumulator
 make release
