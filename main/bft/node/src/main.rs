@@ -60,6 +60,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .build()
         .unwrap();
 
+    log::info!("Setting up client network");
     // Setup client network
     let (cli_send, cli_recv) =
         cli_net_rt.block_on(net::Protocol::<Transaction, Block>::client_setup(
@@ -73,10 +74,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         .build()
         .unwrap();
 
+    log::info!("Setting up networking");
     // Setup networking
     let protocol_network =
         net::Protocol::<ProtocolMsg, ProtocolMsg>::new(config.id, config.num_nodes as u16);
 
+    log::info!("Setting up protocol network");
     // Setup the protocol network
     let (net_send, net_recv) = prot_net_rt.block_on(protocol_network.server_setup(
         config.net_map.clone(),
