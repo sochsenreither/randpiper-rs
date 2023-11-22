@@ -1,2 +1,2 @@
 killall -9 node-bft
-timeout 180 ./randpiper-rs/target/release/node-bft -c ./randpiper-rs/test/4/nodes-$1.dat -d 280 -i ./randpiper-rs/ips_file > output.log
+timeout 900 ./randpiper-rs/target/release/node-bft -c ./randpiper-rs/test/64/nodes-$1.dat -d 8000 -i ./randpiper-rs/ips_file > output.log

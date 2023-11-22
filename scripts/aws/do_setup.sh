@@ -14,12 +14,13 @@ done < $FILE
 for ip in "${IPS[@]}"
 do
     echo $ip
-    ssh -i "randpiper.pem" -o "StrictHostKeyChecking no" -t ubuntu@$ip 'bash -ls' < scripts/aws/setup.sh 
+    ssh -i "randpiper.pem" -o "StrictHostKeyChecking no" -t ubuntu@$ip 'bash -ls' < scripts/aws/setup.sh &
 done
 
-# wait
+wait
 
 for ip in "${IPS[@]}"
 do
-  ssh -i "randpiper.pem" ubuntu@$ip "cd randpiper-rs; cat > ips_file" < $IPS_FILE
+  echo $ip
+  ssh -i "randpiper.pem" ubuntu@$ip "cd randpiper-rs; cat > ips_file" < $IPS_FILE &
 done
